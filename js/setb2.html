@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Formatting</title>
+    <style>
+        .output {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        a {
+            color: blue;
+            text-decoration: none;
+        }
+    </style>
+    <script>
+        function formatText() {
+            const text = document.getElementById("inputText").value;
+            const style = document.getElementById("styleSelect").value;
+            const outputDiv = document.getElementById("output");
+
+            // Apply the selected formatting
+            switch (style) {
+                case "bold":
+                    outputDiv.innerHTML = `<b>${text}</b>`;
+                    break;
+                case "italic":
+                    outputDiv.innerHTML = `<i>${text}</i>`;
+                    break;
+                case "underline":
+                    outputDiv.innerHTML = `<u>${text}</u>`;
+                    break;
+                case "strikethrough":
+                    outputDiv.innerHTML = `<s>${text}</s>`;
+                    break;
+                case "hypertext":
+                    outputDiv.innerHTML = `<a href="https://www.example.com" target="_blank">${text}</a>`;
+                    break;
+                default:
+                    outputDiv.innerHTML = text;
+                    break;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>String Formatting</h1>
+    <label for="inputText">Enter a string:</label>
+    <input type="text" id="inputText" placeholder="Type something" required>
+    <br><br>
+    <label for="styleSelect">Select a style:</label>
+    <select id="styleSelect">
+        <option value="bold">Bold</option>
+        <option value="italic">Italic</option>
+        <option value="underline">Underline</option>
+        <option value="strikethrough">Strikethrough</option>
+        <option value="hypertext">Hypertext</option>
+    </select>
+    <br><br>
+    <button onclick="formatText()">Apply Formatting</button>
+    <div id="output" class="output"></div>
+</body>
+</html>

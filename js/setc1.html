@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFO Queue</title>
+    <script>
+        class Queue {
+            constructor() {
+                this.items = []; // Array to store queue elements
+            }
+
+            // Method to add an element to the queue
+            enqueue(element) {
+                this.items.push(element);
+                console.log(`${element} added to the queue.`);
+            }
+
+            // Method to remove an element from the queue
+            dequeue() {
+                if (this.isEmpty()) {
+                    console.log("Queue is empty.");
+                    return null;
+                }
+                const removedElement = this.items.shift();
+                console.log(`${removedElement} removed from the queue.`);
+                return removedElement;
+            }
+
+            // Method to check if the queue is empty
+            isEmpty() {
+                return this.items.length === 0;
+            }
+
+            // Method to view the front element of the queue
+            front() {
+                if (this.isEmpty()) {
+                    console.log("Queue is empty.");
+                    return null;
+                }
+                console.log(`Front element: ${this.items[0]}`);
+                return this.items[0];
+            }
+
+            // Method to display the entire queue
+            display() {
+                console.log("Current queue:", this.items);
+            }
+        }
+
+        // Example usage
+        const queue = new Queue();
+
+        function addElement() {
+            const newElement = document.getElementById("newElement").value;
+            if (newElement) {
+                queue.enqueue(newElement);
+                queue.display();
+            } else {
+                alert("Please enter a value to add.");
+            }
+        }
+
+        function removeElement() {
+            queue.dequeue();
+            queue.display();
+        }
+    </script>
+</head>
+<body>
+    <h1>FIFO Queue Implementation</h1>
+    <input type="text" id="newElement" placeholder="Enter element to enqueue">
+    <button onclick="addElement()">Enqueue</button>
+    <button onclick="removeElement()">Dequeue</button>
+    <h3>Check the console for queue operations and status.</h3>
+</body>
+</html>
