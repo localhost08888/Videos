@@ -1,111 +1,72 @@
-public import java.util.Stack;
+import java.util.Stack;
 
-class SharedStack {
-    private final Stack<Integer> stack = new Stack<>();
-    private static final int MAX_SIZE = 10;
+class StackManipulator implements Runnable {
+    private Stack<Integer> stack;
+    private boolean isPushing;
 
-    // Method to push elements onto the stack
-    public synchronized void push(int value) {
-        while (stack.size() == MAX_SIZE) {
-            try {
-                System.out.println(Thread.currentThread().getName() + " waiting to push. Stack is full.");
-                wait(); // Wait if stack is full
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.out.println("Push operation interrupted.");
-            }
-        }
-        stack.push(value);
-        System.out.println(Thread.currentThread().getName() + " pushed: " + value);
-        notifyAll(); // Notify waiting threads
-    }
-
-    // Method to pop elements off the stack
-    public synchronized int pop() {
-        while (stack.isEmpty()) {
-            try {
-                System.out.println(Thread.currentThread().getName() + " waiting to pop. Stack is empty.");
-                wait(); // Wait if stack is empty
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.out.println("Pop operation interrupted.");
-            }
-        }
-        int value = stack.pop();
-        System.out.println(Thread.currentThread().getName() + " popped: " + value);
-        notifyAll(); // Notify waiting threads
-        return value;
-    }
-}
-
-class Pusher implements Runnable {
-    private final SharedStack stack;
-
-    public Pusher(SharedStack stack) {
+    // Constructor to initialize stack and operation type (push or pop)
+    public StackManipulator(Stack<Integer> stack, boolean isPushing) {
         this.stack = stack;
+        this.isPushing = isPushing;
     }
 
     @Override
     public void run() {
-        for (int i = 0; i < 20; i++) { // Push 20 elements
-            stack.push(i);
-            try {
-                Thread.sleep(100); // Simulate time taken to push
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        if (isPushing) {
+            for (int i = 0; i < 5; i++) {
+                try {
+                    Thread.sleep(500); // Simulate delay
+                    synchronized (stack) {
+                        stack.push(i);
+                        System.out.println(Thread.currentThread().getName() + " pushed: " + i);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            for (int i = 0; i < 5; i++) {
+                try {
+                    Thread.sleep(1000); // Simulate delay
+                    synchronized (stack) {
+                        if (!stack.isEmpty()) {
+                            int poppedValue = stack.pop();
+                            System.out.println(Thread.currentThread().getName() + " popped: " + poppedValue);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 }
 
-class Popper implements Runnable {
-    private final SharedStack stack;
-
-    public Popper(SharedStack stack) {
-        this.stack = stack;
-    }
-
-    @Override
-    public void run() {
-        for (int i = 0; i < 40; i++) { // Pop 40 elements
-            stack.pop();
-            try {
-                Thread.sleep(150); // Simulate time taken to pop
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-}
-
-public class setc3 {
+public class StackExample {
     public static void main(String[] args) {
-        SharedStack sharedStack = new SharedStack();
+        Stack<Integer> sharedStack = new Stack<>();
 
-        // Create two pusher threads
-        Thread pusher1 = new Thread(new Pusher(sharedStack), "Pusher-1");
-        Thread pusher2 = new Thread(new Pusher(sharedStack), "Pusher-2");
+        // Create two threads to push elements onto the stack
+        Thread pushThread1 = new Thread(new StackManipulator(sharedStack, true), "Pusher-1");
+        Thread pushThread2 = new Thread(new StackManipulator(sharedStack, true), "Pusher-2");
 
-        // Create one popper thread
-        Thread popper = new Thread(new Popper(sharedStack), "Popper");
+        // Create a third thread to pop elements off the stack
+        Thread popThread = new Thread(new StackManipulator(sharedStack, false), "Popper");
 
         // Start the threads
-        pusher1.start();
-        pusher2.start();
-        popper.start();
+        pushThread1.start();
+        pushThread2.start();
+        popThread.start();
 
-        // Wait for threads to finish
+        // Wait for all threads to finish
         try {
-            pusher1.join();
-            pusher2.join();
-            popper.join();
+            pushThread1.join();
+            pushThread2.join();
+            popThread.join();
         } catch (InterruptedException e) {
-            System.out.println("Main thread interrupted.");
+            e.printStackTrace();
         }
 
-        System.out.println("All threads have finished.");
+        System.out.println("Final Stack: " + sharedStack);
     }
-}
- {
-    
 }
