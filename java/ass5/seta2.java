@@ -1,123 +1,65 @@
-public import java.io.BufferedReader;
+import java.util.Random;
 
-import java.io.File;
+class SumCalculator extends Thread {
+    private int[] array;
+    private int start;
+    private int end;
+    private long sum;
 
-import java.io.FileReader;
-
-import java.util.Scanner;
-
-
-
-class Mythread extends Thread {
-
-    String str;
-
-    String filename;
-
-
-
-    Mythread(String str, String filename) {
-
-        this.str = str;
-
-        this.filename = filename;
-
+    public SumCalculator(int[] array, int start, int end) {
+        this.array = array;
+        this.start = start;
+        this.end = end;
     }
-
-
 
     public void run() {
-
-        try {
-
-            int flag = 0;
-
-            File f = new File(filename);
-
-            BufferedReader br = new BufferedReader(new FileReader(f));
-
-            String line = "";
-
-            while ((line = br.readLine()) != null) {
-
-                if (line.contains(str) == true) {
-
-                    flag = 1;
-
-                    break;
-
-                }
-
-            }
-
-            if (flag == 1) {
-
-                System.out.println("String found in folder/file :" + filename);
-
-            } else {
-
-                System.out.println("String not found in folder/file :" + filename);
-
-
-
-            }
-
-            br.close();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
+        sum = 0;
+        for (int i = start; i < end; i++) {
+            sum += array[i];
         }
-
     }
 
+    public long getSum() {
+        return sum;
+    }
 }
 
-
-
-public class B2 {
-
+public class seta2 {
     public static void main(String[] args) {
+        int[] numbers = new int[1000];
+        Random random = new Random();
 
-        Scanner sc = new Scanner(System.in);
-
-        System.out.println("Enter Search string :");
-
-        String str = sc.nextLine();
-
-
-
-        //Your folder name 
-
-        String dirname = "thread";
-
-        File d = new File(dirname);
-
-        if (d.isDirectory()) {
-
-            String s[] = d.list();
-
-            for (int i = 0; i < s.length; i++) {
-
-                File f = new File(dirname + "/" + s[i]);
-
-                if (f.isFile() && s[i].endsWith(".txt")) {
-
-                    Mythread t = new Mythread(str, dirname + "/" + s[i]);
-
-                    t.start();
-
-                }
-
-            }
-
+        // Generate 1000 random integers
+        for (int i = 0; i < numbers.length; i++) {
+            numbers[i] = random.nextInt(100) + 1; // Random integers between 1 and 100
         }
 
-        sc.close();
+        SumCalculator[] threads = new SumCalculator[10];
+        int chunkSize = numbers.length / 10;
 
+        // Create and start 10 threads
+        for (int i = 0; i < threads.length; i++) {
+            int start = i * chunkSize;
+            int end = (i == threads.length - 1) ? numbers.length : start + chunkSize;
+            threads[i] = new SumCalculator(numbers, start, end);
+            threads[i].start();
+        }
+
+        // Wait for all threads to finish and calculate the total sum
+        long totalSum = 0;
+        for (SumCalculator thread : threads) {
+            try {
+                thread.join();
+                totalSum += thread.getSum();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Calculate average
+        double average = totalSum / (double) numbers.length;
+
+        System.out.println("Total Sum: " + totalSum);
+        System.out.println("Average: " + average);
     }
-
-} {
-    
 }
