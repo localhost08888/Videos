@@ -4,66 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIFO Queue</title>
+    <style>
+        #output {
+            margin-top: 20px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            width: 300px;
+            height: 150px;
+            overflow-y: auto;
+        }
+    </style>
     <script>
-        class Queue {
-            constructor() {
-                this.items = []; // Array to store queue elements
-            }
-
-            // Method to add an element to the queue
-            enqueue(element) {
-                this.items.push(element);
-                console.log(`${element} added to the queue.`);
-            }
-
-            // Method to remove an element from the queue
-            dequeue() {
-                if (this.isEmpty()) {
-                    console.log("Queue is empty.");
-                    return null;
-                }
-                const removedElement = this.items.shift();
-                console.log(`${removedElement} removed from the queue.`);
-                return removedElement;
-            }
-
-            // Method to check if the queue is empty
-            isEmpty() {
-                return this.items.length === 0;
-            }
-
-            // Method to view the front element of the queue
-            front() {
-                if (this.isEmpty()) {
-                    console.log("Queue is empty.");
-                    return null;
-                }
-                console.log(`Front element: ${this.items[0]}`);
-                return this.items[0];
-            }
-
-            // Method to display the entire queue
-            display() {
-                console.log("Current queue:", this.items);
-            }
+        // Queue class to handle FIFO operations
+        function Queue() {
+            this.items = []; // Array to store queue elements
         }
 
-        // Example usage
-        const queue = new Queue();
+        // Method to add an element to the queue
+        Queue.prototype.enqueue = function(element) {
+            this.items.push(element);
+            updateOutput(element + " added to the queue.");
+        };
 
+        // Method to remove an element from the queue
+        Queue.prototype.dequeue = function() {
+            if (this.isEmpty()) {
+                updateOutput("Queue is empty.");
+                return null;
+            }
+            var removedElement = this.items.shift();
+            updateOutput(removedElement + " removed from the queue.");
+            return removedElement;
+        };
+
+        // Method to check if the queue is empty
+        Queue.prototype.isEmpty = function() {
+            return this.items.length === 0;
+        };
+
+        // Method to view the front element of the queue
+        Queue.prototype.front = function() {
+            if (this.isEmpty()) {
+                updateOutput("Queue is empty.");
+                return null;
+            }
+            updateOutput("Front element: " + this.items[0]);
+            return this.items[0];
+        };
+
+        // Method to display the entire queue
+        Queue.prototype.display = function() {
+            updateOutput("Current queue: " + this.items.join(", "));
+        };
+
+        // Create a new queue object
+        var queue = new Queue();
+
+        // Function to add an element to the queue
         function addElement() {
-            const newElement = document.getElementById("newElement").value;
+            var newElement = document.getElementById("newElement").value;
             if (newElement) {
                 queue.enqueue(newElement);
                 queue.display();
             } else {
-                alert("Please enter a value to add.");
+                updateOutput("Please enter a value to add.");
             }
         }
 
+        // Function to remove an element from the queue
         function removeElement() {
             queue.dequeue();
             queue.display();
+        }
+
+        // Function to update the output area
+        function updateOutput(message) {
+            var outputDiv = document.getElementById("output");
+            var messageDiv = document.createElement("div");
+            messageDiv.textContent = message;
+            outputDiv.appendChild(messageDiv);
+            outputDiv.scrollTop = outputDiv.scrollHeight; // Scroll to the bottom
         }
     </script>
 </head>
@@ -72,6 +93,8 @@
     <input type="text" id="newElement" placeholder="Enter element to enqueue">
     <button onclick="addElement()">Enqueue</button>
     <button onclick="removeElement()">Dequeue</button>
-    <h3>Check the console for queue operations and status.</h3>
+
+    <div id="output"></div> <!-- Area to display queue operations -->
+
 </body>
 </html>
