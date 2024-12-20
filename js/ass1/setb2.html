@@ -15,6 +15,7 @@
         }
     </style>
     <script>
+        // Function to apply the selected text formatting
         function formatText() {
             const text = document.getElementById("inputText").value;
             const style = document.getElementById("styleSelect").value;
@@ -23,19 +24,19 @@
             // Apply the selected formatting
             switch (style) {
                 case "bold":
-                    outputDiv.innerHTML = `<b>${text}</b>`;
+                    outputDiv.innerHTML = "<b>" + text + "</b>";
                     break;
                 case "italic":
-                    outputDiv.innerHTML = `<i>${text}</i>`;
+                    outputDiv.innerHTML = "<i>" + text + "</i>";
                     break;
                 case "underline":
-                    outputDiv.innerHTML = `<u>${text}</u>`;
+                    outputDiv.innerHTML = "<u>" + text + "</u>";
                     break;
                 case "strikethrough":
-                    outputDiv.innerHTML = `<s>${text}</s>`;
+                    outputDiv.innerHTML = "<s>" + text + "</s>";
                     break;
                 case "hypertext":
-                    outputDiv.innerHTML = `<a href="https://www.example.com" target="_blank">${text}</a>`;
+                    outputDiv.innerHTML = "<a href='https://www.example.com' target='_blank'>" + text + "</a>";
                     break;
                 default:
                     outputDiv.innerHTML = text;
