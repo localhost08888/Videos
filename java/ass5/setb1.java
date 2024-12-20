@@ -1,121 +1,89 @@
-import java.io.BufferedReader;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
-import java.io.File;
+class FileSearcher extends Thread {
+    private final File file;
+    private final String searchString;
+    private final List<String> results;
 
-import java.io.FileReader;
-
-import java.util.Scanner;
-
-
-
-class Mythread extends Thread {
-
-    String str;
-
-    String filename;
-
-
-
-    Mythread(String str, String filename) {
-
-        this.str = str;
-
-        this.filename = filename;
-
+    public FileSearcher(File file, String searchString, List<String> results) {
+        this.file = file;
+        this.searchString = searchString;
+        this.results = results;
     }
 
-
-
+    @Override
     public void run() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            int lineNumber = 0;
 
-        try {
-
-            int flag = 0;
-
-            File f = new File(filename);
-
-            BufferedReader br = new BufferedReader(new FileReader(f));
-
-            String line = "";
-
-            while ((line = br.readLine()) != null) {
-
-                if (line.contains(str) == true) {
-
-                    flag = 1;
-
-                    break;
-
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                if (line.contains(searchString)) {
+                    synchronized (results) {
+                        results.add(file.getName() + " - Line " + lineNumber + ": " + line.trim());
+                    }
                 }
-
             }
-
-            if (flag == 1) {
-
-                System.out.println("String found in folder/file :" + filename);
-
-            } else {
-
-                System.out.println("String not found in folder/file :" + filename);
-
-
-
-            }
-
-            br.close();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
+        } catch (IOException e) {
+            System.err.println("Error reading file " + file.getName() + ": " + e.getMessage());
         }
-
     }
-
 }
 
-
-
-public class setb1 {
-
+public class SimpleSearchEngine {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-        Scanner sc = new Scanner(System.in);
+        // Get the search string from the user
+        System.out.print("Enter the string to search: ");
+        String searchString = scanner.nextLine();
 
-        System.out.println("Enter Search string :");
+        // Get all text files in the current folder
+        File currentFolder = new File(".");
+        File[] textFiles = currentFolder.listFiles((dir, name) -> name.endsWith(".txt"));
 
-        String str = sc.nextLine();
-
-
-
-        //Your folder name 
-
-        String dirname = "thread";
-
-        File d = new File(dirname);
-
-        if (d.isDirectory()) {
-
-            String s[] = d.list();
-
-            for (int i = 0; i < s.length; i++) {
-
-                File f = new File(dirname + "/" + s[i]);
-
-                if (f.isFile() && s[i].endsWith(".txt")) {
-
-                    Mythread t = new Mythread(str, dirname + "/" + s[i]);
-
-                    t.start();
-
-                }
-
-            }
-
+        if (textFiles == null || textFiles.length == 0) {
+            System.out.println("No text files found in the current folder.");
+            return;
         }
 
-        sc.close();
+        // List to store results
+        List<String> results = Collections.synchronizedList(new ArrayList<>());
 
+        // Create and start a thread for each file
+        List<Thread> threads = new ArrayList<>();
+        for (File file : textFiles) {
+            FileSearcher searcher = new FileSearcher(file, searchString, results);
+            threads.add(searcher);
+            searcher.start();
+        }
+
+        // Wait for all threads to finish
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.err.println("Thread interrupted: " + e.getMessage());
+            }
+        }
+
+        // Display the results
+        if (results.isEmpty()) {
+            System.out.println("No occurrences of \"" + searchString + "\" found in text files.");
+        } else {
+            System.out.println("Search results:");
+            for (String result : results) {
+                System.out.println(result);
+            }
+        }
     }
-
 }
+===========================================
+
+    Save the code to a file named SimpleSearchEngine.java.
+Compile the program: javac SimpleSearchEngine.java.
+Place some .txt files in the same folder as the program.
+Run the program: java SimpleSearchEngine.
