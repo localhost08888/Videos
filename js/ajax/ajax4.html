@@ -1,0 +1,225 @@
+Step 1: Create the Tables (SQL)
+We'll first create two tables:
+
+MOVIE: Stores movie details (movie number, movie name, release year).
+ACTOR: Stores actor details (actor number, actor name).
+We'll also need a relationship table ACTOR_MOVIE to represent the many-to-many relationship between ACTOR and MOVIE.
+SQL to create tables:
+sql
+Copy code
+CREATE TABLE MOVIE (
+    mno INT PRIMARY KEY,
+    mname VARCHAR(100),
+    release_yr INT
+);
+
+CREATE TABLE ACTOR (
+    ano INT PRIMARY KEY,
+    aname VARCHAR(100)
+);
+
+CREATE TABLE ACTOR_MOVIE (
+    ano INT,
+    mno INT,
+    PRIMARY KEY (ano, mno),
+    FOREIGN KEY (ano) REFERENCES ACTOR(ano),
+    FOREIGN KEY (mno) REFERENCES MOVIE(mno)
+);
+
+-- Insert some sample data into MOVIE
+INSERT INTO MOVIE (mno, mname, release_yr) VALUES (1, 'The Matrix', 1999);
+INSERT INTO MOVIE (mno, mname, release_yr) VALUES (2, 'John Wick', 2014);
+INSERT INTO MOVIE (mno, mname, release_yr) VALUES (3, 'Speed', 1994);
+
+-- Insert some sample data into ACTOR
+INSERT INTO ACTOR (ano, aname) VALUES (1, 'Keanu Reeves');
+INSERT INTO ACTOR (ano, aname) VALUES (2, 'Sandra Bullock');
+
+-- Insert data into ACTOR_MOVIE to represent the many-to-many relationship
+INSERT INTO ACTOR_MOVIE (ano, mno) VALUES (1, 1);  -- Keanu Reeves acted in The Matrix
+INSERT INTO ACTOR_MOVIE (ano, mno) VALUES (1, 2);  -- Keanu Reeves acted in John Wick
+INSERT INTO ACTOR_MOVIE (ano, mno) VALUES (2, 1);  -- Sandra Bullock acted in The Matrix
+Step 2: Server-Side Script (PHP)
+Now, we will create a PHP script (get_movies_by_actor.php) that will fetch the movie details based on the selected actor.
+
+get_movies_by_actor.php
+php
+Copy code
+<?php
+// Database connection details
+$servername = "localhost";
+$username = "root"; // Your database username
+$password = ""; // Your database password
+$dbname = "your_database"; // Replace with your database name
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get the actor number (ano) from the GET request
+$ano = $_GET['ano'];
+
+// Query to get the movies for the selected actor
+$sql = "
+    SELECT m.mname, m.release_yr
+    FROM MOVIE m
+    JOIN ACTOR_MOVIE am ON m.mno = am.mno
+    WHERE am.ano = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $ano);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Fetch movies and return as JSON
+$movies = [];
+while ($row = $result->fetch_assoc()) {
+    $movies[] = $row;
+}
+
+echo json_encode($movies);
+
+$stmt->close();
+$conn->close();
+?>
+This script:
+
+Accepts the actor number (ano) via a GET request.
+Queries the MOVIE and ACTOR_MOVIE tables to fetch the movies for that actor.
+Returns the movie names and release years as a JSON response.
+Step 3: Client-Side (HTML + JavaScript + jQuery)
+On the client side, we will have:
+
+A dropdown to select an actor.
+An area to display the corresponding movies for the selected actor.
+An Ajax request to fetch the movie details based on the selected actor.
+index.html
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Details by Actor</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Fetch actor names for the dropdown
+            $.ajax({
+                url: 'get_actors.php',  // PHP script to fetch actors
+                type: 'GET',
+                success: function(data) {
+                    var actors = JSON.parse(data);
+                    var options = '<option value="">Select Actor</option>';
+                    actors.forEach(function(actor) {
+                        options += '<option value="' + actor.ano + '">' + actor.aname + '</option>';
+                    });
+                    $('#actorDropdown').html(options);
+                },
+                error: function() {
+                    alert("Error loading actor names.");
+                }
+            });
+
+            // Fetch and display the selected actor's movies
+            $('#actorDropdown').change(function() {
+                var ano = $(this).val();
+                if (ano) {
+                    $.ajax({
+                        url: 'get_movies_by_actor.php', // Fetch movies by actor
+                        type: 'GET',
+                        data: { ano: ano },
+                        success: function(data) {
+                            var movies = JSON.parse(data);
+                            if (movies.length > 0) {
+                                var movieList = '<ul>';
+                                movies.forEach(function(movie) {
+                                    movieList += '<li>' + movie.mname + ' (' + movie.release_yr + ')</li>';
+                                });
+                                movieList += '</ul>';
+                                $('#movieDetails').html(movieList);
+                            } else {
+                                $('#movieDetails').html('No movies found for this actor.');
+                            }
+                        },
+                        error: function() {
+                            alert("Error fetching movie details.");
+                        }
+                    });
+                } else {
+                    $('#movieDetails').html('');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+<h2>Select Actor and View Movies</h2>
+
+<!-- Dropdown to select actor -->
+<select id="actorDropdown">
+    <option value="">Select Actor</option>
+</select>
+
+<!-- Area to display movie details -->
+<div id="movieDetails" style="margin-top: 20px;"></div>
+
+</body>
+</html>
+Step 4: Get Actor Names for Dropdown (PHP)
+We will also need a PHP script (get_actors.php) to fetch the list of actors and return their names and IDs as a JSON response.
+
+get_actors.php
+php
+Copy code
+<?php
+// Database connection details
+$servername = "localhost";
+$username = "root"; // Your database username
+$password = ""; // Your database password
+$dbname = "your_database"; // Replace with your database name
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Query to get actor names
+$sql = "SELECT ano, aname FROM ACTOR";
+$result = $conn->query($sql);
+
+$actors = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $actors[] = $row;
+    }
+}
+
+echo json_encode($actors);
+
+$conn->close();
+?>
+How It Works:
+index.html:
+
+This page contains a dropdown for selecting an actor. Once an actor is selected, an Ajax request is made to get_movies_by_actor.php to fetch the movies associated with that actor.
+The list of movies is displayed in a simple unordered list (<ul>).
+get_actors.php:
+
+This script fetches the list of all actors and returns them as a JSON object. The actor names are displayed in the dropdown.
+get_movies_by_actor.php:
+
+This script is called when an actor is selected. It queries the MOVIE and ACTOR_MOVIE tables to fetch the list of movies for the selected actor and returns them as a JSON object.
+How to Run:
+Database Setup: Ensure the MOVIE, ACTOR, and ACTOR_MOVIE tables are created, and sample data is inserted.
+PHP Server: Ensure you're running this on a PHP-enabled server (e.g., XAMPP, WAMP).
+Access the index.html: Open the HTML file in the browser. Select an actor from the dropdown, and their movies will be displayed.
+Let me know if you need any further clarification or adjustments!

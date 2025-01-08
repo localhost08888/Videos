@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username Validation with Ajax</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function validateUsername() {
+            var username = document.getElementById("username").value;
+            var message = document.getElementById("message");
+
+            // Clear previous message
+            message.textContent = "";
+
+            // Client-side validation
+            if (username === "") {
+                message.textContent = "Enter username";
+                message.style.color = "red";
+            } else if (username.length < 3) {
+                message.textContent = "Username is too short";
+                message.style.color = "red";
+            } else {
+                // If client-side validation passes, make an Ajax request
+                $.ajax({
+                    url: 'check_username.php',  // Server-side script that checks if username exists
+                    type: 'POST',
+                    data: { username: username },
+                    success: function(response) {
+                        if (response === 'valid') {
+                            message.textContent = 'Valid username';
+                            message.style.color = 'green';
+                        } else {
+                            message.textContent = 'Username already taken';
+                            message.style.color = 'red';
+                        }
+                    },
+                    error: function() {
+                        message.textContent = 'Error checking username';
+                        message.style.color = 'red';
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+
+<h2>Username Validation</h2>
+<!-- Input field for username -->
+<input type="text" id="username" placeholder="Enter username">
+<button onclick="validateUsername()">Validate</button>
+
+<!-- Area to display validation message -->
+<p id="message"></p>
+
+</body>
+
+
+
+
+</html>
+Server-Side Script (check_username.php):
+
+You'd need a server-side script (PHP, Node.js, etc.) to handle the request and return a response. Here’s an example of what check_username.php could look like:
+php
+Copy code
+
+
+
+<?php
+// Example PHP code to simulate checking a database for an existing username
+$username = $_POST['username'];
+
+// Sample list of taken usernames (in a real scenario, you'd query a database)
+$takenUsernames = ['john', 'jane', 'admin'];
+
+if (in_array(strtolower($username), $takenUsernames)) {
+    echo 'taken';  // Username already exists
+} else {
+    echo 'valid';  // Username is valid
+}
+?>

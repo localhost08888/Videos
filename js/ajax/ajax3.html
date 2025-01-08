@@ -1,0 +1,200 @@
+CREATE TABLE EMP (
+    eno INT PRIMARY KEY,
+    ename VARCHAR(50),
+    designation VARCHAR(50),
+    salary DECIMAL(10, 2)
+);
+
+-- Insert some sample employee data
+INSERT INTO EMP (eno, ename, designation, salary) VALUES (1, 'John Doe', 'Software Engineer', 60000);
+INSERT INTO EMP (eno, ename, designation, salary) VALUES (2, 'Jane Smith', 'Project Manager', 75000);
+INSERT INTO EMP (eno, ename, designation, salary) VALUES (3, 'Samuel Green', 'HR Manager', 55000);
+INSERT INTO EMP (eno, ename, designation, salary) VALUES (4, 'Emily White', 'Data Analyst', 50000);
+
+
+
+
+
+Step 2: Server-Side Script (PHP)
+Create a PHP script (get_employee_details.php) that will query the database and return the selected employee’s details.
+
+get_employee_details.php
+php
+Copy code
+<?php
+// Connect to the database
+$servername = "localhost";
+$username = "root";  // Use your database username
+$password = "";      // Use your database password
+$dbname = "your_database";  // Replace with your database name
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check the connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get the employee number from the request
+$eno = $_GET['eno'];
+
+// Query the database to fetch the employee details
+$sql = "SELECT * FROM EMP WHERE eno = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $eno);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    // Fetch the employee details
+    $employee = $result->fetch_assoc();
+    echo json_encode($employee); // Return the details as JSON
+} else {
+    echo json_encode(["error" => "Employee not found"]);
+}
+
+$stmt->close();
+$conn->close();
+?>
+
+
+
+
+
+This PHP script:
+
+Connects to the MySQL database.
+Accepts the eno (Employee Number) from the GET request.
+Queries the EMP table for the details of the employee.
+Returns the employee details as a JSON object.
+Step 3: Client-Side (HTML + JavaScript + jQuery)
+The client-side code will have:
+
+A dropdown to select an employee.
+A section to display the employee’s details.
+An Ajax call to fetch employee details based on the selection.
+index.html
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Details</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Fetch employee names for the dropdown
+            $.ajax({
+                url: 'get_employees.php',  // A PHP script to get the employee names
+                type: 'GET',
+                success: function(data) {
+                    var employees = JSON.parse(data);
+                    var options = '<option value="">Select Employee</option>';
+                    employees.forEach(function(employee) {
+                        options += '<option value="' + employee.eno + '">' + employee.ename + '</option>';
+                    });
+                    $('#employeeDropdown').html(options);
+                },
+                error: function() {
+                    alert("Error loading employee names.");
+                }
+            });
+
+            // Fetch and display the selected employee's details
+            $('#employeeDropdown').change(function() {
+                var eno = $(this).val();
+                if (eno) {
+                    $.ajax({
+                        url: 'get_employee_details.php', // Fetch employee details by eno
+                        type: 'GET',
+                        data: { eno: eno },
+                        success: function(data) {
+                            var employee = JSON.parse(data);
+                            if (employee.error) {
+                                $('#employeeDetails').html(employee.error);
+                            } else {
+                                $('#employeeDetails').html(
+                                    '<strong>Name:</strong> ' + employee.ename + '<br>' +
+                                    '<strong>Designation:</strong> ' + employee.designation + '<br>' +
+                                    '<strong>Salary:</strong> ' + employee.salary
+                                );
+                            }
+                        },
+                        error: function() {
+                            alert("Error fetching employee details.");
+                        }
+                    });
+                } else {
+                    $('#employeeDetails').html('');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+<h2>Select Employee and View Details</h2>
+
+<!-- Dropdown to select employee -->
+<select id="employeeDropdown">
+    <option value="">Select Employee</option>
+</select>
+
+<!-- Area to display employee details -->
+<div id="employeeDetails" style="margin-top: 20px;"></div>
+
+</body>
+</html>
+Step 4: Get Employee Names for Dropdown (PHP)
+Create another PHP script (get_employees.php) that fetches the list of employee names (to populate the dropdown) and sends them as a JSON response.
+
+get_employees.php
+php
+Copy code
+<?php
+// Connect to the database
+$servername = "localhost";
+$username = "root";  // Use your database username
+$password = "";      // Use your database password
+$dbname = "your_database";  // Replace with your database name
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check the connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Query to get employee names
+$sql = "SELECT eno, ename FROM EMP";
+$result = $conn->query($sql);
+
+$employees = [];
+if ($result->num_rows > 0) {
+    // Fetch each employee's details
+    while ($row = $result->fetch_assoc()) {
+        $employees[] = $row;
+    }
+}
+
+// Return the employees as a JSON response
+echo json_encode($employees);
+
+$conn->close();
+?>
+How it Works:
+index.html:
+
+This page includes a dropdown to select an employee. Once the employee is selected, an Ajax request is sent to get_employee_details.php to fetch and display the employee's details (name, designation, and salary).
+get_employees.php:
+
+This script retrieves the list of employee names and IDs from the database and populates the dropdown.
+get_employee_details.php:
+
+This script is called when an employee is selected, and it fetches that employee's details from the database. The details are returned as a JSON response and displayed on the page.
+How to Run:
+Set Up the Database: Make sure the EMP table is created in your MySQL database with sample data.
+PHP Server: Ensure you are running this on a server with PHP support (e.g., XAMPP, WAMP, or a live server).
+Access index.html: Open the index.html in your browser, select an employee from the dropdown, and view the details.

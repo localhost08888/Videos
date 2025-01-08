@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read File and Print</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle the Print button click
+            $('#printButton').click(function() {
+                // Send Ajax request to the server to read the text file
+                $.ajax({
+                    url: 'readfile.php',  // This PHP script will read the file
+                    type: 'GET',
+                    success: function(data) {
+                        // Display the content of the file in the div
+                        $('#fileContent').text(data);
+                        // Trigger the print dialog
+                        window.print();
+                    },
+                    error: function() {
+                        alert('Error reading the file.');
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+
+<h2>Read File and Print</h2>
+<!-- Button to trigger the reading and printing of the file -->
+<button id="printButton">Print</button>
+
+<!-- Area to display the file content -->
+<div id="fileContent" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
+
+</body>
+</html>
+PHP Code (Server-Side - readfile.php)
+php
+Copy code
+<?php
+// Specify the file path
+$filePath = 'example.txt';  // Update this with the actual file path
+
+// Check if the file exists
+if (file_exists($filePath)) {
+    // Read the content of the file and return it
+    echo file_get_contents($filePath);
+} else {
+    echo "Error: File not found.";
+}
+?>
+
+
+Example of example.txt:
+If you have a file example.txt with the following content:
+
+arduino
+Copy code
+This is the content of the text file.
+It can have multiple lines.
+You can print this file directly.
